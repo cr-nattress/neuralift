@@ -7,6 +7,10 @@
   # Output directory (Next.js default)
   publish = ".next"
 
+[build.environment]
+  # Node.js version (Next.js 16 + React 19 require Node 18.17+)
+  NODE_VERSION = "20"
+
 # Next.js runtime plugin
 [[plugins]]
   package = "@netlify/plugin-nextjs"
