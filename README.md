@@ -2,10 +2,11 @@
 
 **Train your working memory with science-backed dual n-back exercises.**
 
-![Status](https://img.shields.io/badge/status-in%20development-yellow)
-![License](https://img.shields.io/badge/license-MIT-blue)
-![Next.js](https://img.shields.io/badge/Next.js-14%2B-black)
-![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)
+[![CI](https://github.com/cr-nattress/neuralift/actions/workflows/ci.yml/badge.svg)](https://github.com/cr-nattress/neuralift/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
 
 ---
 
@@ -61,8 +62,8 @@ Dual n-back is a cognitive training task that challenges your working memory by 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/dual-n-back-training.git
-cd dual-n-back-training
+git clone https://github.com/cr-nattress/neuralift.git
+cd neuralift
 
 # Install dependencies
 npm install
@@ -125,7 +126,7 @@ Neuralift is built with **Clean Architecture** principles, ensuring complete sep
 
 | Category | Technology |
 |----------|------------|
-| Framework | Next.js 14+ (App Router) |
+| Framework | Next.js 16 (App Router) |
 | Language | TypeScript (strict mode) |
 | Styling | Tailwind CSS + CSS Variables |
 | Animation | Framer Motion |
@@ -248,14 +249,14 @@ NEXT_PUBLIC_LLM_API_ENDPOINT=/api/llm  # Can be customized for external API
 
 ## Contributing
 
-Contributions are welcome! This project is in active development.
+Contributions are welcome! Please read our [Contributing Guide](.github/CONTRIBUTING.md) and [Code of Conduct](.github/CODE_OF_CONDUCT.md) before submitting pull requests.
 
 ### Development Setup
 
 ```bash
 # Clone and install
-git clone https://github.com/yourusername/dual-n-back-training.git
-cd dual-n-back-training
+git clone https://github.com/cr-nattress/neuralift.git
+cd neuralift
 npm install
 
 # Run development server
