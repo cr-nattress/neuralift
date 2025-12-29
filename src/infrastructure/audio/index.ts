@@ -1,0 +1,1 @@
+export { HowlerAudioPlayer } from './HowlerAudioPlayer';
