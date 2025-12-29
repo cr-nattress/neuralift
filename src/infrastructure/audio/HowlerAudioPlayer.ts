@@ -4,7 +4,8 @@
  * HowlerAudioPlayer
  *
  * Implements IAudioPlayer using Howler.js for cross-browser audio playback.
- * Handles letter sounds, feedback sounds, and audio context management.
+ * Falls back to Web Speech API for letters and Web Audio API for feedback tones
+ * when audio files are not available.
  */
 
 import { Howl, Howler } from 'howler';
@@ -33,12 +34,26 @@ const DEFAULT_VOLUMES = {
   complete: 0.6,
 } as const;
 
+/**
+ * Feedback tone configurations (frequency in Hz, duration in ms)
+ */
+const FEEDBACK_TONES: Record<FeedbackSoundType, { freq: number; duration: number; type: OscillatorType }> = {
+  correct: { freq: 880, duration: 150, type: 'sine' },
+  incorrect: { freq: 220, duration: 200, type: 'square' },
+  tick: { freq: 1000, duration: 50, type: 'sine' },
+  complete: { freq: 660, duration: 300, type: 'sine' },
+};
+
 export class HowlerAudioPlayer implements IAudioPlayer {
   private letterSounds: Map<string, Howl> = new Map();
   private feedbackSounds: Map<FeedbackSoundType, Howl> = new Map();
+  private failedLetters: Set<string> = new Set();
+  private failedFeedback: Set<FeedbackSoundType> = new Set();
+  private audioContext: AudioContext | null = null;
   private initialized = false;
   private muted = false;
   private volume = 80; // 0-100 scale
+  private useSpeechSynthesis = false;
 
   /**
    * Get the audio file path for a letter
@@ -57,6 +72,68 @@ export class HowlerAudioPlayer implements IAudioPlayer {
   }
 
   /**
+   * Get or create the AudioContext for tone generation
+   */
+  private getAudioContext(): AudioContext {
+    if (!this.audioContext) {
+      this.audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    }
+    return this.audioContext;
+  }
+
+  /**
+   * Play a tone using Web Audio API
+   */
+  private playTone(frequency: number, duration: number, type: OscillatorType = 'sine'): Promise<void> {
+    return new Promise((resolve) => {
+      try {
+        const ctx = this.getAudioContext();
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, ctx.currentTime);
+
+        const vol = (this.volume / 100) * 0.3; // Keep tones quieter
+        gainNode.gain.setValueAtTime(vol, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration / 1000);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + duration / 1000);
+
+        setTimeout(resolve, duration);
+      } catch {
+        resolve();
+      }
+    });
+  }
+
+  /**
+   * Play a letter using Web Speech API
+   */
+  private speakLetter(letter: string): Promise<void> {
+    return new Promise((resolve) => {
+      if (!('speechSynthesis' in window)) {
+        resolve();
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(letter);
+      utterance.rate = 1.2;
+      utterance.pitch = 1.0;
+      utterance.volume = this.volume / 100;
+
+      utterance.onend = () => resolve();
+      utterance.onerror = () => resolve();
+
+      window.speechSynthesis.speak(utterance);
+    });
+  }
+
+  /**
    * Initialize the audio player and preload all sounds
    */
   async initialize(): Promise<void> {
@@ -67,6 +144,9 @@ export class HowlerAudioPlayer implements IAudioPlayer {
       if (Howler.ctx && Howler.ctx.state === 'suspended') {
         await Howler.ctx.resume();
       }
+
+      // Check if speech synthesis is available
+      this.useSpeechSynthesis = 'speechSynthesis' in window;
 
       // Initialize letter sounds
       await this.preload([...AVAILABLE_LETTERS]);
@@ -80,18 +160,20 @@ export class HowlerAudioPlayer implements IAudioPlayer {
           preload: true,
           volume: DEFAULT_VOLUMES[type] * (this.volume / 100),
           html5: false, // Use Web Audio API for lower latency
-          onloaderror: (_id, error) => {
-            console.warn(`Failed to load feedback sound "${type}":`, error);
+          onloaderror: () => {
+            console.log(`[HowlerAudioPlayer] Using tone fallback for "${type}"`);
+            this.failedFeedback.add(type);
           },
         });
         this.feedbackSounds.set(type, sound);
       }
 
       this.initialized = true;
-      console.log('[HowlerAudioPlayer] Initialized successfully');
+      console.log('[HowlerAudioPlayer] Initialized with Web Speech fallback');
     } catch (error) {
       console.error('[HowlerAudioPlayer] Initialization failed:', error);
-      throw error;
+      // Still mark as initialized to allow speech fallback
+      this.initialized = true;
     }
   }
 
@@ -106,6 +188,15 @@ export class HowlerAudioPlayer implements IAudioPlayer {
     if (this.muted) return;
 
     const normalizedLetter = letter.toUpperCase();
+
+    // Try Howler first, fall back to speech synthesis
+    if (this.failedLetters.has(normalizedLetter) || !this.letterSounds.has(normalizedLetter)) {
+      if (this.useSpeechSynthesis) {
+        return this.speakLetter(normalizedLetter);
+      }
+      return;
+    }
+
     const sound = this.letterSounds.get(normalizedLetter);
 
     if (sound) {
@@ -113,9 +204,18 @@ export class HowlerAudioPlayer implements IAudioPlayer {
         const id = sound.play();
         sound.once('end', () => resolve(), id);
         sound.once('stop', () => resolve(), id);
+        sound.once('playerror', () => {
+          // Fallback to speech on play error
+          this.failedLetters.add(normalizedLetter);
+          if (this.useSpeechSynthesis) {
+            this.speakLetter(normalizedLetter).then(resolve);
+          } else {
+            resolve();
+          }
+        }, id);
       });
-    } else {
-      console.warn(`[HowlerAudioPlayer] No sound loaded for letter: ${letter}`);
+    } else if (this.useSpeechSynthesis) {
+      return this.speakLetter(normalizedLetter);
     }
   }
 
@@ -129,6 +229,12 @@ export class HowlerAudioPlayer implements IAudioPlayer {
 
     if (this.muted) return;
 
+    // Use tone fallback if file failed to load
+    if (this.failedFeedback.has(type)) {
+      const tone = FEEDBACK_TONES[type];
+      return this.playTone(tone.freq, tone.duration, tone.type);
+    }
+
     const sound = this.feedbackSounds.get(type);
 
     if (sound) {
@@ -136,9 +242,17 @@ export class HowlerAudioPlayer implements IAudioPlayer {
         const id = sound.play();
         sound.once('end', () => resolve(), id);
         sound.once('stop', () => resolve(), id);
+        sound.once('playerror', () => {
+          // Fallback to tone on play error
+          this.failedFeedback.add(type);
+          const tone = FEEDBACK_TONES[type];
+          this.playTone(tone.freq, tone.duration, tone.type).then(resolve);
+        }, id);
       });
     } else {
-      console.warn(`[HowlerAudioPlayer] No sound loaded for feedback type: ${type}`);
+      // Fallback to tone
+      const tone = FEEDBACK_TONES[type];
+      return this.playTone(tone.freq, tone.duration, tone.type);
     }
   }
 
@@ -151,8 +265,8 @@ export class HowlerAudioPlayer implements IAudioPlayer {
     for (const letter of letters) {
       const normalizedLetter = letter.toUpperCase();
 
-      // Skip if already loaded
-      if (this.letterSounds.has(normalizedLetter)) continue;
+      // Skip if already loaded or failed
+      if (this.letterSounds.has(normalizedLetter) || this.failedLetters.has(normalizedLetter)) continue;
 
       // Only load valid letters
       if (!AVAILABLE_LETTERS.includes(normalizedLetter as typeof AVAILABLE_LETTERS[number])) {
@@ -160,7 +274,7 @@ export class HowlerAudioPlayer implements IAudioPlayer {
         continue;
       }
 
-      const loadPromise = new Promise<void>((resolve, reject) => {
+      const loadPromise = new Promise<void>((resolve) => {
         const sound = new Howl({
           src: [this.getLetterPath(normalizedLetter)],
           preload: true,
@@ -170,9 +284,9 @@ export class HowlerAudioPlayer implements IAudioPlayer {
             this.letterSounds.set(normalizedLetter, sound);
             resolve();
           },
-          onloaderror: (_id, error) => {
-            console.warn(`[HowlerAudioPlayer] Failed to load letter "${normalizedLetter}":`, error);
-            // Resolve anyway to not block other sounds
+          onloaderror: () => {
+            console.log(`[HowlerAudioPlayer] Using speech fallback for letter "${normalizedLetter}"`);
+            this.failedLetters.add(normalizedLetter);
             resolve();
           },
         });
