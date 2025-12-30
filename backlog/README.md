@@ -12,8 +12,9 @@ This backlog contains all epics and user stories for the Neuralift Dual N-Back T
 | 04 | Page Development | 9 | 33 | High |
 | 05 | Help System & Contextual Content | 6 | 24 | Medium |
 | 06 | Polish, Animations & Accessibility | 9 | 41 | Medium |
+| 07 | Audio CLI Tool | 10 | 49 | High |
 
-**Total Stories: 56 | Total Points: 254**
+**Total Stories: 66 | Total Points: 303**
 
 ## Infrastructure Stack
 
@@ -60,7 +61,9 @@ Epic 01 (Foundation)
     │                   │
     └──► Epic 03 (Training Infrastructure)
                        │
-                       └──► Epic 06 (Polish & Accessibility)
+                       ├──► Epic 06 (Polish & Accessibility)
+                       │
+                       └──► Epic 07 (Audio CLI Tool) [Standalone]
 ```
 
 ## Quick Links
@@ -71,6 +74,7 @@ Epic 01 (Foundation)
 - [Epic 04: Page Development](./epic-04-page-development/)
 - [Epic 05: Help System](./epic-05-help-system/)
 - [Epic 06: Polish & Accessibility](./epic-06-polish-accessibility/)
+- [Epic 07: Audio CLI Tool](./epic-07-audio-cli/)
 
 ## Getting Started
 
@@ -79,6 +83,7 @@ Epic 01 (Foundation)
 3. Epic 04 requires both Epic 02 and Epic 03
 4. Epic 05 requires Epic 04
 5. Epic 06 can start after Epic 04, finalized last
+6. Epic 07 is standalone and can be worked independently (requires GCP bucket)
 
 ## Definition of Done
 
