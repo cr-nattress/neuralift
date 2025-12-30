@@ -3,6 +3,7 @@ import { mkdir } from 'fs/promises';
 import { ConfigError } from '../utils/errors.js';
 import { loadConfig } from '../utils/config.js';
 import { OpenAITTSProvider } from './openai-tts.js';
+import { ElevenLabsTTSProvider } from './elevenlabs-tts.js';
 import type { TTSProvider, TTSOptions, TTSResult } from '../types/tts.js';
 import {
   LETTER_PRONUNCIATIONS,
@@ -129,18 +130,27 @@ export class AudioGenerator {
 }
 
 /**
- * Create an audio generator with OpenAI TTS
+ * Create an audio generator with the best available TTS provider
+ * Priority: ElevenLabs > OpenAI
  */
 export function createAudioGenerator(): AudioGenerator {
   const config = loadConfig();
 
-  if (!config.openaiApiKey) {
-    throw new ConfigError(
-      'OpenAI API key is required for audio generation',
-      'Set OPENAI_API_KEY environment variable'
-    );
+  // Try ElevenLabs first (higher quality)
+  const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY;
+  if (elevenLabsApiKey) {
+    const ttsProvider = new ElevenLabsTTSProvider(elevenLabsApiKey);
+    return new AudioGenerator(ttsProvider, config.outputDir);
   }
 
-  const ttsProvider = new OpenAITTSProvider(config.openaiApiKey);
-  return new AudioGenerator(ttsProvider, config.outputDir);
+  // Fall back to OpenAI
+  if (config.openaiApiKey) {
+    const ttsProvider = new OpenAITTSProvider(config.openaiApiKey);
+    return new AudioGenerator(ttsProvider, config.outputDir);
+  }
+
+  throw new ConfigError(
+    'No TTS API key configured',
+    'Set ELEVENLABS_API_KEY or OPENAI_API_KEY environment variable'
+  );
 }

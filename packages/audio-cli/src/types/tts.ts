@@ -2,7 +2,7 @@
  * TTS (Text-to-Speech) Provider Types
  */
 
-export type TTSProviderName = 'openai' | 'google';
+export type TTSProviderName = 'openai' | 'google' | 'elevenlabs';
 
 // OpenAI TTS voice options
 export type OpenAIVoice = 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';

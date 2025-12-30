@@ -1,5 +1,6 @@
 export { OpenAITTSProvider, createOpenAITTS } from './openai-tts.js';
 export { GoogleTTSProvider, createGoogleTTS } from './google-tts.js';
+export { ElevenLabsTTSProvider, createElevenLabsTTS, ELEVENLABS_VOICES } from './elevenlabs-tts.js';
 export { AudioGenerator, createAudioGenerator } from './audio-generator.js';
 export { GCPStorageService, createGCPStorage } from './gcp-storage.js';
 export type { GCPStorageConfig, FileInfo, UploadResult, DownloadResult, SyncResult } from './gcp-storage.js';
