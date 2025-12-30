@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState, useEffect, useCallback } from 'react';
+import { use, useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence } from 'framer-motion';
 import { BackgroundOrbs } from '@/components/ui/BackgroundOrbs';
@@ -14,6 +14,11 @@ import {
 } from '@/components/training';
 import { getLevelById } from '@neuralift/core';
 import { useLiveRegion } from '@/components/a11y';
+import { useCore } from '@/application/providers/CoreProvider';
+
+// Training letters used for audio
+const TRAINING_LETTERS = ['C', 'H', 'K', 'L', 'Q', 'R', 'S', 'T'] as const;
+type TrainingLetter = (typeof TRAINING_LETTERS)[number];
 
 interface TrainingSessionPageProps {
   params: Promise<{ levelId: string }>;
@@ -26,6 +31,7 @@ export default function TrainingSessionPage({ params }: TrainingSessionPageProps
   const router = useRouter();
   const level = getLevelById(levelId);
   const { announce } = useLiveRegion();
+  const core = useCore();
 
   // Session state
   const [status, setStatus] = useState<SessionStatus>('initializing');
@@ -34,8 +40,29 @@ export default function TrainingSessionPage({ params }: TrainingSessionPageProps
   const [activePosition, setActivePosition] = useState<number | null>(null);
   const [positionPressed, setPositionPressed] = useState(false);
   const [audioPressed, setAudioPressed] = useState(false);
+  const [currentLetter, setCurrentLetter] = useState<TrainingLetter | null>(null);
+
+  // Audio tracking refs
+  const audioInitializedRef = useRef(false);
+  const lastPlayedTrialRef = useRef(0);
 
   const totalTrials = 20;
+
+  // Helper to get random letter
+  const getRandomLetter = useCallback((): TrainingLetter => {
+    const index = Math.floor(Math.random() * TRAINING_LETTERS.length);
+    return TRAINING_LETTERS[index] as TrainingLetter;
+  }, []);
+
+  // Initialize audio on mount
+  useEffect(() => {
+    if (!audioInitializedRef.current) {
+      audioInitializedRef.current = true;
+      core.audioPlayer.initialize().catch((err) => {
+        console.warn('Failed to initialize audio:', err);
+      });
+    }
+  }, [core.audioPlayer]);
 
   // Start countdown when component mounts
   useEffect(() => {
@@ -68,10 +95,17 @@ export default function TrainingSessionPage({ params }: TrainingSessionPageProps
         setCurrentTrial(1);
         // Show first position
         setActivePosition(Math.floor(Math.random() * 9));
+        // Play first audio letter
+        const letter = getRandomLetter();
+        setCurrentLetter(letter);
+        core.audioPlayer.playLetter(letter).catch((err) => {
+          console.warn('Failed to play letter:', err);
+        });
+        lastPlayedTrialRef.current = 1;
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [status, countdownValue, announce]);
+  }, [status, countdownValue, announce, getRandomLetter, core.audioPlayer]);
 
   // Trial progression (simplified demo logic)
   useEffect(() => {
@@ -92,11 +126,25 @@ export default function TrainingSessionPage({ params }: TrainingSessionPageProps
       if (currentTrial >= totalTrials) {
         announce('Session complete! Loading results.', 'assertive');
         setStatus('completed');
+        // Play completion sound
+        core.audioPlayer.playFeedback('complete').catch((err) => {
+          console.warn('Failed to play completion sound:', err);
+        });
       } else {
-        setCurrentTrial((prev) => prev + 1);
+        const nextTrial = currentTrial + 1;
+        setCurrentTrial(nextTrial);
         setActivePosition(Math.floor(Math.random() * 9));
         setPositionPressed(false);
         setAudioPressed(false);
+        // Play audio letter for new trial (only if we haven't played it yet)
+        if (lastPlayedTrialRef.current < nextTrial) {
+          const letter = getRandomLetter();
+          setCurrentLetter(letter);
+          core.audioPlayer.playLetter(letter).catch((err) => {
+            console.warn('Failed to play letter:', err);
+          });
+          lastPlayedTrialRef.current = nextTrial;
+        }
       }
     }, 3000);
 
@@ -104,7 +152,7 @@ export default function TrainingSessionPage({ params }: TrainingSessionPageProps
       clearTimeout(hideTimer);
       clearTimeout(trialTimer);
     };
-  }, [status, currentTrial, announce]);
+  }, [status, currentTrial, announce, getRandomLetter, core.audioPlayer]);
 
   // Handle completion
   useEffect(() => {
@@ -141,12 +189,22 @@ export default function TrainingSessionPage({ params }: TrainingSessionPageProps
   const handlePositionMatch = useCallback(() => {
     if (status !== 'active') return;
     setPositionPressed(true);
-  }, [status]);
+    // Play feedback sound (demo: randomly correct/incorrect since we're not tracking actual matches)
+    const isCorrect = Math.random() > 0.5;
+    core.audioPlayer.playFeedback(isCorrect ? 'correct' : 'incorrect').catch((err) => {
+      console.warn('Failed to play feedback:', err);
+    });
+  }, [status, core.audioPlayer]);
 
   const handleAudioMatch = useCallback(() => {
     if (status !== 'active') return;
     setAudioPressed(true);
-  }, [status]);
+    // Play feedback sound (demo: randomly correct/incorrect since we're not tracking actual matches)
+    const isCorrect = Math.random() > 0.5;
+    core.audioPlayer.playFeedback(isCorrect ? 'correct' : 'incorrect').catch((err) => {
+      console.warn('Failed to play feedback:', err);
+    });
+  }, [status, core.audioPlayer]);
 
   const handlePause = useCallback(() => {
     setStatus('paused');
