@@ -4,13 +4,13 @@
  * Mobile Layout
  *
  * Layout component for mobile viewports (<640px).
- * Features compact header and bottom navigation.
+ * Optimized for no scrolling - content fits within viewport.
  */
 
 import { type ReactNode } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { MobileHeader } from '../navigation/MobileHeader';
+import { UniformHeader } from '../navigation/UniformHeader';
 import { BottomNavigation } from '../navigation/BottomNavigation';
 
 interface MobileLayoutProps {
@@ -21,27 +21,27 @@ interface MobileLayoutProps {
 
 export function MobileLayout({ children, showHeader, showBottomNav }: MobileLayoutProps) {
   return (
-    <>
+    <div className="h-[100dvh] flex flex-col overflow-hidden">
       {/* Header */}
       <AnimatePresence>
-        {showHeader && <MobileHeader />}
+        {showHeader && <UniformHeader />}
       </AnimatePresence>
 
-      {/* Page Content */}
-      <div
+      {/* Page Content - fills remaining space */}
+      <main
         className={cn(
-          'min-h-screen transition-[padding] duration-200',
+          'flex-1 overflow-hidden',
           showHeader && 'pt-14',
-          showBottomNav && 'pb-20'
+          showBottomNav && 'pb-16'
         )}
       >
         {children}
-      </div>
+      </main>
 
       {/* Bottom Navigation */}
       <AnimatePresence>
         {showBottomNav && <BottomNavigation />}
       </AnimatePresence>
-    </>
+    </div>
   );
 }

@@ -4,13 +4,13 @@
  * Tablet Layout
  *
  * Layout component for tablet viewports (640px - 1024px).
- * Uses same navigation pattern as mobile but can be customized for tablet-specific needs.
+ * Optimized for no scrolling with larger content area.
  */
 
 import { type ReactNode } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { MobileHeader } from '../navigation/MobileHeader';
+import { UniformHeader } from '../navigation/UniformHeader';
 import { BottomNavigation } from '../navigation/BottomNavigation';
 
 interface TabletLayoutProps {
@@ -21,27 +21,29 @@ interface TabletLayoutProps {
 
 export function TabletLayout({ children, showHeader, showBottomNav }: TabletLayoutProps) {
   return (
-    <>
+    <div className="h-[100dvh] flex flex-col overflow-hidden">
       {/* Header */}
       <AnimatePresence>
-        {showHeader && <MobileHeader />}
+        {showHeader && <UniformHeader />}
       </AnimatePresence>
 
-      {/* Page Content */}
-      <div
+      {/* Page Content - centered with max width */}
+      <main
         className={cn(
-          'min-h-screen transition-[padding] duration-200',
+          'flex-1 overflow-hidden flex items-center justify-center',
           showHeader && 'pt-14',
-          showBottomNav && 'pb-20'
+          showBottomNav && 'pb-16'
         )}
       >
-        {children}
-      </div>
+        <div className="w-full max-w-2xl px-6 h-full">
+          {children}
+        </div>
+      </main>
 
       {/* Bottom Navigation */}
       <AnimatePresence>
         {showBottomNav && <BottomNavigation />}
       </AnimatePresence>
-    </>
+    </div>
   );
 }

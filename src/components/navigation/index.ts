@@ -8,6 +8,7 @@
 export { NavigationShell } from './NavigationShell';
 export { NavigationProvider, useNavigation } from './NavigationContext';
 export { MobileHeader } from './MobileHeader';
+export { UniformHeader } from './UniformHeader';
 export { BottomNavigation } from './BottomNavigation';
 export { DesktopHeader } from './DesktopHeader';
 

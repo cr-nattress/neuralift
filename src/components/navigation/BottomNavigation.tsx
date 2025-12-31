@@ -3,20 +3,23 @@
 /**
  * Bottom Navigation
  *
- * A mobile-friendly bottom navigation bar with 4 main nav items.
- * Shows on mobile and tablet viewports.
+ * A mobile-friendly bottom navigation bar with main nav items.
+ * Shows on all viewports. Filters items based on feature flags.
  */
 
+import { useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { isFeatureEnabled, type FeatureFlag } from '@/config/features';
 
 interface NavItemConfig {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   matchPaths: string[];
+  feature: FeatureFlag | null; // null means always enabled
 }
 
 // Icons as components
@@ -60,24 +63,28 @@ const NAV_ITEMS: NavItemConfig[] = [
     label: 'Home',
     icon: HomeIcon,
     matchPaths: ['/'],
+    feature: null, // Always enabled
   },
   {
     href: '/levels',
     label: 'Train',
     icon: PlayIcon,
     matchPaths: ['/levels', '/train'],
+    feature: 'FEATURE_LEVELS',
   },
   {
     href: '/progress',
     label: 'Progress',
     icon: ChartIcon,
     matchPaths: ['/progress', '/results'],
+    feature: 'FEATURE_PROGRESS',
   },
   {
     href: '/settings',
     label: 'Settings',
     icon: SettingsIcon,
     matchPaths: ['/settings'],
+    feature: 'FEATURE_SETTINGS',
   },
 ];
 
@@ -103,6 +110,14 @@ interface BottomNavigationProps {
 export function BottomNavigation({ className }: BottomNavigationProps) {
   const pathname = usePathname();
 
+  // Filter nav items based on feature flags
+  const enabledNavItems = useMemo(() => {
+    return NAV_ITEMS.filter((item) => {
+      if (item.feature === null) return true;
+      return isFeatureEnabled(item.feature);
+    });
+  }, []);
+
   return (
     <motion.nav
       initial={{ y: 80, opacity: 0 }}
@@ -120,7 +135,7 @@ export function BottomNavigation({ className }: BottomNavigationProps) {
       )}
       aria-label="Main navigation"
     >
-      {NAV_ITEMS.map((item) => {
+      {enabledNavItems.map((item) => {
         const active = isNavItemActive(pathname, item);
         const Icon = item.icon;
 

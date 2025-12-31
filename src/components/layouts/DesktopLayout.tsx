@@ -4,13 +4,13 @@
  * Desktop Layout
  *
  * Layout component for desktop viewports (>1024px).
- * Uses same navigation pattern as mobile/tablet but can be customized for desktop-specific needs.
+ * Optimized for no scrolling with spacious centered content.
  */
 
 import { type ReactNode } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { MobileHeader } from '../navigation/MobileHeader';
+import { UniformHeader } from '../navigation/UniformHeader';
 import { BottomNavigation } from '../navigation/BottomNavigation';
 
 interface DesktopLayoutProps {
@@ -21,27 +21,29 @@ interface DesktopLayoutProps {
 
 export function DesktopLayout({ children, showHeader, showBottomNav }: DesktopLayoutProps) {
   return (
-    <>
+    <div className="h-[100dvh] flex flex-col overflow-hidden">
       {/* Header */}
       <AnimatePresence>
-        {showHeader && <MobileHeader />}
+        {showHeader && <UniformHeader />}
       </AnimatePresence>
 
-      {/* Page Content */}
-      <div
+      {/* Page Content - centered with generous max width */}
+      <main
         className={cn(
-          'min-h-screen transition-[padding] duration-200',
+          'flex-1 overflow-hidden flex items-center justify-center',
           showHeader && 'pt-14',
-          showBottomNav && 'pb-20'
+          showBottomNav && 'pb-16'
         )}
       >
-        {children}
-      </div>
+        <div className="w-full max-w-5xl px-8 h-full">
+          {children}
+        </div>
+      </main>
 
       {/* Bottom Navigation */}
       <AnimatePresence>
         {showBottomNav && <BottomNavigation />}
       </AnimatePresence>
-    </>
+    </div>
   );
 }
