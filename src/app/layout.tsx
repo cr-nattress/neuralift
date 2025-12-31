@@ -3,7 +3,8 @@ import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { CoreProvider } from '@/application/providers';
 import { LiveRegionProvider } from '@/components/a11y';
-import { NavigationProvider, NavigationShell } from '@/components/navigation';
+import { NavigationProvider } from '@/components/navigation';
+import { ResponsiveLayout } from '@/components/layouts';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -37,7 +38,7 @@ export default function RootLayout({
         <CoreProvider>
           <LiveRegionProvider>
             <NavigationProvider>
-              <NavigationShell>{children}</NavigationShell>
+              <ResponsiveLayout>{children}</ResponsiveLayout>
             </NavigationProvider>
           </LiveRegionProvider>
         </CoreProvider>

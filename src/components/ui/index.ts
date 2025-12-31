@@ -19,3 +19,6 @@ export { Slider, type SliderProps } from './Slider';
 export { Select, type SelectProps, type SelectOption } from './Select';
 export { Spinner } from './Spinner';
 export { Skeleton } from './Skeleton';
+export { NavItem } from './NavItem';
+export { AppLogo } from './AppLogo';
+export { HomeIcon, PlayIcon, ChartIcon, SettingsIcon, BackIcon } from './NavIcons';
