@@ -75,8 +75,8 @@ export function NavigationProvider({ children }: NavigationProviderProps) {
   const hideNavigation = useCallback(() => setMode('hidden'), []);
   const showNavigation = useCallback(() => setMode('full'), []);
 
-  // Determine visibility based on mode and breakpoint
-  const showBottomNav = mode !== 'hidden' && breakpoint !== 'desktop';
+  // Determine visibility based on mode (bottom nav always visible on all breakpoints)
+  const showBottomNav = mode !== 'hidden';
   const showHeader = mode !== 'hidden';
 
   const value: NavigationContextValue = {

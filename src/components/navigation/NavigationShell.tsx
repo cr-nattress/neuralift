@@ -43,14 +43,14 @@ export function NavigationShell({ children }: NavigationShellProps) {
           // Top padding for header
           showHeader && !isDesktop && 'pt-14',
           showHeader && isDesktop && 'pt-16',
-          // Bottom padding for bottom nav (mobile/tablet only)
+          // Bottom padding for bottom nav (all breakpoints)
           showBottomNav && 'pb-20'
         )}
       >
         {children}
       </div>
 
-      {/* Bottom Navigation - only on mobile and tablet */}
+      {/* Bottom Navigation - visible on all breakpoints */}
       <AnimatePresence>
         {showBottomNav && <BottomNavigation />}
       </AnimatePresence>
