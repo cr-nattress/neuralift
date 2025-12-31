@@ -5,8 +5,9 @@ import { BackButton } from '@/components/layout/BackButton';
 import { PhaseSection } from '@/components/levels/PhaseSection';
 import { LevelCard } from '@/components/levels/LevelCard';
 import { LEVELS, type LevelConfig } from '@neuralift/core';
+import { isFeatureEnabled, type FeatureFlag } from '@/config/features';
 
-// Phase configuration
+// Phase configuration with feature flags
 const PHASES = [
   {
     id: 'foundations',
@@ -14,6 +15,7 @@ const PHASES = [
     description: 'Build your core skills with single-modality training',
     accentColor: 'cyan' as const,
     levelIds: ['position-1', 'audio-1'],
+    featureFlag: 'FEATURE_PHASE_FOUNDATIONS' as FeatureFlag,
   },
   {
     id: 'intermediate',
@@ -21,6 +23,7 @@ const PHASES = [
     description: 'Push your limits with 2-back challenges',
     accentColor: 'magenta' as const,
     levelIds: ['position-2', 'audio-2'],
+    featureFlag: 'FEATURE_PHASE_INTERMEDIATE' as FeatureFlag,
   },
   {
     id: 'advanced',
@@ -28,6 +31,7 @@ const PHASES = [
     description: 'Master dual n-back for maximum cognitive benefit',
     accentColor: 'gold' as const,
     levelIds: ['dual-2', 'dual-3'],
+    featureFlag: 'FEATURE_PHASE_ADVANCED' as FeatureFlag,
   },
 ];
 
@@ -65,11 +69,14 @@ export default function LevelsPage() {
             .map((id) => levelMap.get(id))
             .filter((level): level is LevelConfig => level !== undefined);
 
+          // Check if this phase is enabled via feature flag
+          const isPhaseEnabled = isFeatureEnabled(phase.featureFlag);
+
           return (
             <PhaseSection
               key={phase.id}
               title={phase.title}
-              description={phase.description}
+              description={isPhaseEnabled ? phase.description : 'Coming soon'}
               accentColor={phase.accentColor}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -77,9 +84,9 @@ export default function LevelsPage() {
                   <LevelCard
                     key={level.id}
                     level={level}
-                    locked={!unlockedLevelIds.includes(level.id)}
+                    locked={!isPhaseEnabled || !unlockedLevelIds.includes(level.id)}
                     complete={completedLevelIds.includes(level.id)}
-                    recommended={level.id === currentLevelId}
+                    recommended={isPhaseEnabled && level.id === currentLevelId}
                   />
                 ))}
               </div>

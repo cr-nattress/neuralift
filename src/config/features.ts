@@ -12,7 +12,10 @@ export type FeatureFlag =
   | 'FEATURE_PROGRESS'
   | 'FEATURE_HELP'
   | 'FEATURE_ONBOARDING'
-  | 'FEATURE_RESULTS';
+  | 'FEATURE_RESULTS'
+  | 'FEATURE_PHASE_FOUNDATIONS'
+  | 'FEATURE_PHASE_INTERMEDIATE'
+  | 'FEATURE_PHASE_ADVANCED';
 
 interface FeatureConfig {
   name: string;
@@ -54,6 +57,21 @@ export const FEATURE_FLAGS: Record<FeatureFlag, FeatureConfig> = {
   FEATURE_RESULTS: {
     name: 'Results History',
     description: 'Session results and history',
+    defaultEnabled: false,
+  },
+  FEATURE_PHASE_FOUNDATIONS: {
+    name: 'Foundations Phase',
+    description: 'Position 1-back and Audio 1-back levels',
+    defaultEnabled: true,
+  },
+  FEATURE_PHASE_INTERMEDIATE: {
+    name: 'Intermediate Phase',
+    description: 'Position 2-back and Audio 2-back levels',
+    defaultEnabled: false,
+  },
+  FEATURE_PHASE_ADVANCED: {
+    name: 'Advanced Phase',
+    description: 'Dual 2-back and Dual 3-back levels',
     defaultEnabled: false,
   },
 };
