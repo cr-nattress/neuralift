@@ -3,6 +3,7 @@ import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { CoreProvider } from '@/application/providers';
 import { SkipLink, LiveRegionProvider } from '@/components/a11y';
+import { NavigationProvider, NavigationShell } from '@/components/navigation';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -35,8 +36,10 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <CoreProvider>
           <LiveRegionProvider>
-            <SkipLink />
-            {children}
+            <NavigationProvider>
+              <SkipLink />
+              <NavigationShell>{children}</NavigationShell>
+            </NavigationProvider>
           </LiveRegionProvider>
         </CoreProvider>
       </body>

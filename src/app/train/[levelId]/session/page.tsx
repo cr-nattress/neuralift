@@ -15,6 +15,7 @@ import {
 import { getLevelById } from '@neuralift/core';
 import { useLiveRegion } from '@/components/a11y';
 import { useCore } from '@/application/providers/CoreProvider';
+import { useNavigation } from '@/components/navigation';
 
 // Training letters used for audio
 const TRAINING_LETTERS = ['C', 'H', 'K', 'L', 'Q', 'R', 'S', 'T'] as const;
@@ -32,6 +33,15 @@ export default function TrainingSessionPage({ params }: TrainingSessionPageProps
   const level = getLevelById(levelId);
   const { announce } = useLiveRegion();
   const core = useCore();
+  const { hideNavigation, showNavigation } = useNavigation();
+
+  // Hide navigation during training session
+  useEffect(() => {
+    hideNavigation();
+    return () => {
+      showNavigation();
+    };
+  }, [hideNavigation, showNavigation]);
 
   // Session state
   const [status, setStatus] = useState<SessionStatus>('initializing');
@@ -40,7 +50,7 @@ export default function TrainingSessionPage({ params }: TrainingSessionPageProps
   const [activePosition, setActivePosition] = useState<number | null>(null);
   const [positionPressed, setPositionPressed] = useState(false);
   const [audioPressed, setAudioPressed] = useState(false);
-  const [currentLetter, setCurrentLetter] = useState<TrainingLetter | null>(null);
+  const [_currentLetter, setCurrentLetter] = useState<TrainingLetter | null>(null);
 
   // Audio tracking refs
   const audioInitializedRef = useRef(false);
@@ -163,29 +173,6 @@ export default function TrainingSessionPage({ params }: TrainingSessionPageProps
     }
   }, [status, router]);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (status === 'paused' && e.key === 'Escape') {
-        setStatus('active');
-        return;
-      }
-
-      if (status !== 'active') return;
-
-      if (e.key === 'a' || e.key === 'A') {
-        handlePositionMatch();
-      } else if (e.key === 'l' || e.key === 'L') {
-        handleAudioMatch();
-      } else if (e.key === 'Escape') {
-        setStatus('paused');
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [status]);
-
   const handlePositionMatch = useCallback(() => {
     if (status !== 'active') return;
     setPositionPressed(true);
@@ -219,6 +206,29 @@ export default function TrainingSessionPage({ params }: TrainingSessionPageProps
   const handleQuit = useCallback(() => {
     router.push('/levels');
   }, [router]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (status === 'paused' && e.key === 'Escape') {
+        setStatus('active');
+        return;
+      }
+
+      if (status !== 'active') return;
+
+      if (e.key === 'a' || e.key === 'A') {
+        handlePositionMatch();
+      } else if (e.key === 'l' || e.key === 'L') {
+        handleAudioMatch();
+      } else if (e.key === 'Escape') {
+        setStatus('paused');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [status, handlePositionMatch, handleAudioMatch]);
 
   if (!level) {
     return (
@@ -261,7 +271,12 @@ export default function TrainingSessionPage({ params }: TrainingSessionPageProps
       </div>
 
       {/* Training Grid */}
-      <TrainingGrid activePosition={activePosition} className="mb-8" />
+      <TrainingGrid
+        activePosition={activePosition}
+        className="mb-8"
+        onGridClick={handlePositionMatch}
+        disabled={status !== 'active'}
+      />
 
       {/* Response Buttons */}
       <ResponseButtons

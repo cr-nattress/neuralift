@@ -4,15 +4,28 @@ import { useState, useEffect, useMemo } from 'react';
 import { Transition } from 'framer-motion';
 
 /**
+ * Get initial reduced motion preference (SSR-safe)
+ */
+function getInitialReducedMotion(): boolean {
+  if (typeof window === 'undefined' || !window.matchMedia) {
+    return false;
+  }
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+/**
  * Hook to detect user's reduced motion preference
  * @returns true if user prefers reduced motion
  */
 export function useReducedMotion(): boolean {
-  const [reducedMotion, setReducedMotion] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(getInitialReducedMotion);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) {
+      return;
+    }
+
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReducedMotion(mediaQuery.matches);
 
     const handleChange = (event: MediaQueryListEvent) => {
       setReducedMotion(event.matches);
