@@ -14,9 +14,10 @@ This backlog contains all epics and user stories for the Neuralift Dual N-Back T
 | 06 | Polish, Animations & Accessibility | 9 | 41 | Medium |
 | 07 | Audio CLI Tool | 10 | 49 | High |
 | 08 | ElevenLabs Audio Integration | 1 | 5 | Medium |
-| 09 | Mobile Navigation | 7 | 26 | High |
+| 09 | Mobile Navigation | 8 | 34 | High |
+| 10 | UI Optimization & MVP Release | 5 | 26 | Critical |
 
-**Total Stories: 74 | Total Points: 334**
+**Total Stories: 80 | Total Points: 368**
 
 ## Infrastructure Stack
 
@@ -62,6 +63,8 @@ Epic 01 (Foundation)
     │        └──► Epic 04 (Pages) ──► Epic 05 (Help System)
     │                   │
     │                   └──► Epic 09 (Mobile Navigation)
+    │                                    │
+    │                                    └──► Epic 10 (UI Optimization & MVP)
     │
     └──► Epic 03 (Training Infrastructure)
                        │
@@ -83,6 +86,7 @@ Epic 01 (Foundation)
 - [Epic 07: Audio CLI Tool](./epic-07-audio-cli/)
 - [Epic 08: ElevenLabs Audio](./epic-08-elevenlabs-audio/)
 - [Epic 09: Mobile Navigation](./epic-09-mobile-navigation/)
+- [Epic 10: UI Optimization & MVP](./epic-10-ui-optimization/)
 
 ## Getting Started
 
