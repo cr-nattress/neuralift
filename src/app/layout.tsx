@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { CoreProvider } from '@/application/providers';
-import { SkipLink, LiveRegionProvider } from '@/components/a11y';
+import { LiveRegionProvider } from '@/components/a11y';
 import { NavigationProvider, NavigationShell } from '@/components/navigation';
 
 const inter = Inter({
@@ -37,7 +37,6 @@ export default function RootLayout({
         <CoreProvider>
           <LiveRegionProvider>
             <NavigationProvider>
-              <SkipLink />
               <NavigationShell>{children}</NavigationShell>
             </NavigationProvider>
           </LiveRegionProvider>
