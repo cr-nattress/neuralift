@@ -12,7 +12,6 @@ import { AnimatePresence } from 'framer-motion';
 import { useNavigation } from './NavigationContext';
 import { MobileHeader } from './MobileHeader';
 import { BottomNavigation } from './BottomNavigation';
-import { DesktopHeader } from './DesktopHeader';
 import { cn } from '@/lib/utils';
 
 interface NavigationShellProps {
@@ -20,20 +19,13 @@ interface NavigationShellProps {
 }
 
 export function NavigationShell({ children }: NavigationShellProps) {
-  const { showHeader, showBottomNav, breakpoint } = useNavigation();
-
-  const isDesktop = breakpoint === 'desktop';
+  const { showHeader, showBottomNav } = useNavigation();
 
   return (
     <>
-      {/* Desktop Header - only on large screens */}
+      {/* Header - same style on all screen sizes */}
       <AnimatePresence>
-        {showHeader && isDesktop && <DesktopHeader />}
-      </AnimatePresence>
-
-      {/* Mobile Header - on mobile and tablet */}
-      <AnimatePresence>
-        {showHeader && !isDesktop && <MobileHeader />}
+        {showHeader && <MobileHeader />}
       </AnimatePresence>
 
       {/* Page Content with proper spacing */}
@@ -41,8 +33,7 @@ export function NavigationShell({ children }: NavigationShellProps) {
         className={cn(
           'min-h-screen transition-[padding] duration-200',
           // Top padding for header
-          showHeader && !isDesktop && 'pt-14',
-          showHeader && isDesktop && 'pt-16',
+          showHeader && 'pt-14',
           // Bottom padding for bottom nav (all breakpoints)
           showBottomNav && 'pb-20'
         )}
