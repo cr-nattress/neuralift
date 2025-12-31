@@ -78,11 +78,15 @@ function ResponseButton({
   const colorClasses = {
     cyan: {
       icon: 'bg-accent-cyan/20 text-accent-cyan',
-      pressed: 'bg-accent-cyan/30 border-accent-cyan',
+      iconPressed: 'bg-accent-cyan/40 text-accent-cyan',
+      pressed: 'bg-accent-cyan/40 border-accent-cyan shadow-[0_0_20px_rgba(34,211,238,0.4)]',
+      glow: 'rgba(34,211,238,0.6)',
     },
     magenta: {
       icon: 'bg-accent-magenta/20 text-accent-magenta',
-      pressed: 'bg-accent-magenta/30 border-accent-magenta',
+      iconPressed: 'bg-accent-magenta/40 text-accent-magenta',
+      pressed: 'bg-accent-magenta/40 border-accent-magenta shadow-[0_0_20px_rgba(232,121,249,0.4)]',
+      glow: 'rgba(232,121,249,0.6)',
     },
   };
 
@@ -90,28 +94,55 @@ function ResponseButton({
     <motion.button
       {...props}
       className={cn(
-        'flex flex-col items-center justify-center flex-1',
+        'flex flex-col items-center justify-center flex-1 relative overflow-hidden',
         'min-h-[88px] sm:min-h-[100px]',
         'rounded-2xl border-2',
-        'transition-colors duration-150',
+        'transition-all duration-150',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-cyan',
         'disabled:opacity-50 disabled:cursor-not-allowed',
+        'active:scale-[0.97]', // CSS fallback for non-JS
         pressed
           ? colorClasses[color].pressed
           : 'bg-surface-subtle border-border-default hover:bg-surface-hover hover:border-border-hover'
       )}
       onClick={onClick}
       disabled={disabled}
-      whileTap={{ scale: 0.95 }}
+      whileTap={{ scale: 0.92 }}
+      animate={
+        pressed
+          ? {
+              scale: [1, 1.03, 1],
+              transition: { duration: 0.2 },
+            }
+          : {}
+      }
       aria-label={ariaLabel}
       aria-pressed={pressed}
     >
+      {/* Press ripple effect */}
+      {pressed && (
+        <motion.div
+          className="absolute inset-0 rounded-2xl"
+          initial={{ opacity: 0.6, scale: 0.8 }}
+          animate={{ opacity: 0, scale: 1.2 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          style={{
+            background: `radial-gradient(circle, ${colorClasses[color].glow} 0%, transparent 70%)`,
+          }}
+        />
+      )}
+
       {/* Icon */}
-      <div
+      <motion.div
         className={cn(
-          'w-10 h-10 rounded-xl flex items-center justify-center mb-2',
-          colorClasses[color].icon
+          'w-10 h-10 rounded-xl flex items-center justify-center mb-2 transition-all duration-150',
+          pressed ? colorClasses[color].iconPressed : colorClasses[color].icon
         )}
+        animate={
+          pressed
+            ? { scale: [1, 1.15, 1], transition: { duration: 0.2 } }
+            : {}
+        }
       >
         {color === 'cyan' ? (
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -130,10 +161,18 @@ function ResponseButton({
             />
           </svg>
         )}
-      </div>
+      </motion.div>
 
-      <span className="text-sm text-text-secondary">{label}</span>
-      <kbd className="text-xs text-text-muted mt-1 px-2 py-0.5 rounded bg-bg-elevated">
+      <span className={cn(
+        'text-sm transition-colors duration-150',
+        pressed ? 'text-text-primary' : 'text-text-secondary'
+      )}>
+        {label}
+      </span>
+      <kbd className={cn(
+        'text-xs mt-1 px-2 py-0.5 rounded transition-all duration-150',
+        pressed ? 'bg-white/10 text-text-primary' : 'bg-bg-elevated text-text-muted'
+      )}>
         {shortcut}
       </kbd>
     </motion.button>

@@ -14,8 +14,10 @@ import type { IAudioPlayer, FeedbackSoundType } from '@neuralift/core';
 /**
  * Configuration for audio file paths
  * Can be overridden via environment variables
+ * When empty, we skip file loading and use fallbacks directly
  */
 const AUDIO_BASE_URL = process.env.NEXT_PUBLIC_AUDIO_BUCKET_URL || '';
+const USE_AUDIO_FILES = !!AUDIO_BASE_URL;
 
 /**
  * Available letters for audio playback
@@ -148,28 +150,43 @@ export class HowlerAudioPlayer implements IAudioPlayer {
       // Check if speech synthesis is available
       this.useSpeechSynthesis = 'speechSynthesis' in window;
 
-      // Initialize letter sounds
-      await this.preload([...AVAILABLE_LETTERS]);
+      // Only load audio files if bucket URL is configured
+      if (USE_AUDIO_FILES) {
+        // Initialize letter sounds
+        await this.preload([...AVAILABLE_LETTERS]);
 
-      // Initialize feedback sounds
-      const feedbackTypes: FeedbackSoundType[] = ['correct', 'incorrect', 'tick', 'complete'];
+        // Initialize feedback sounds
+        const feedbackTypes: FeedbackSoundType[] = ['correct', 'incorrect', 'tick', 'complete'];
 
-      for (const type of feedbackTypes) {
-        const sound = new Howl({
-          src: [this.getFeedbackPath(type)],
-          preload: true,
-          volume: DEFAULT_VOLUMES[type] * (this.volume / 100),
-          html5: false, // Use Web Audio API for lower latency
-          onloaderror: () => {
-            console.log(`[HowlerAudioPlayer] Using tone fallback for "${type}"`);
-            this.failedFeedback.add(type);
-          },
-        });
-        this.feedbackSounds.set(type, sound);
+        for (const type of feedbackTypes) {
+          const sound = new Howl({
+            src: [this.getFeedbackPath(type)],
+            preload: true,
+            volume: DEFAULT_VOLUMES[type] * (this.volume / 100),
+            html5: false, // Use Web Audio API for lower latency
+            onloaderror: () => {
+              console.log(`[HowlerAudioPlayer] Using tone fallback for "${type}"`);
+              this.failedFeedback.add(type);
+            },
+          });
+          this.feedbackSounds.set(type, sound);
+        }
+
+        console.log('[HowlerAudioPlayer] Initialized with audio files');
+      } else {
+        // No audio files configured - use fallbacks directly
+        // Mark all letters and feedback as "failed" so they use fallbacks
+        for (const letter of AVAILABLE_LETTERS) {
+          this.failedLetters.add(letter);
+        }
+        const feedbackTypes: FeedbackSoundType[] = ['correct', 'incorrect', 'tick', 'complete'];
+        for (const type of feedbackTypes) {
+          this.failedFeedback.add(type);
+        }
+        console.log('[HowlerAudioPlayer] Initialized with Web Speech + Web Audio fallbacks (no audio files configured)');
       }
 
       this.initialized = true;
-      console.log('[HowlerAudioPlayer] Initialized with Web Speech fallback');
     } catch (error) {
       console.error('[HowlerAudioPlayer] Initialization failed:', error);
       // Still mark as initialized to allow speech fallback
@@ -260,6 +277,9 @@ export class HowlerAudioPlayer implements IAudioPlayer {
    * Preload specific letters for faster playback
    */
   async preload(letters: string[]): Promise<void> {
+    // Skip if no audio files configured
+    if (!USE_AUDIO_FILES) return;
+
     const loadPromises: Promise<void>[] = [];
 
     for (const letter of letters) {

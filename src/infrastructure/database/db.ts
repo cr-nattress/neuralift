@@ -142,6 +142,8 @@ export class NeuraliftDB extends Dexie {
   analyticsEvents!: Table<DBAnalyticsEvent, number>;
   settings!: Table<DBSettings, number>;
 
+  private initPromise: Promise<void> | null = null;
+
   constructor() {
     super('neuralift');
 
@@ -158,22 +160,33 @@ export class NeuraliftDB extends Dexie {
   /**
    * Initialize default records if they don't exist
    * Call this when the app starts
+   * Uses singleton pattern to prevent race conditions
    */
   async initialize(): Promise<void> {
-    // Initialize progress if not exists
+    // Return existing initialization promise if already in progress
+    if (this.initPromise) {
+      return this.initPromise;
+    }
+
+    this.initPromise = this.doInitialize();
+    return this.initPromise;
+  }
+
+  private async doInitialize(): Promise<void> {
+    // Use put() instead of add() to make this idempotent
+    // This avoids "Key already exists" errors from race conditions
     const progressExists = await this.progress.get(1);
     if (!progressExists) {
-      await this.progress.add({
+      await this.progress.put({
         id: 1,
         ...DEFAULT_PROGRESS,
         updated: new Date(),
       });
     }
 
-    // Initialize settings if not exists
     const settingsExists = await this.settings.get(1);
     if (!settingsExists) {
-      await this.settings.add({
+      await this.settings.put({
         id: 1,
         ...DEFAULT_SETTINGS,
         updated: new Date(),
