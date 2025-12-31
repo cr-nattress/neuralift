@@ -24,8 +24,9 @@ Implement a responsive navigation system with a mobile header and bottom navigat
 | 09-005 | [Responsive Navigation Shell](./stories/story-09-005-navigation-shell.md) | 5 | Critical | TODO |
 | 09-006 | [Navigation Animations](./stories/story-09-006-navigation-animations.md) | 3 | Medium | TODO |
 | 09-007 | [Active Route Indicators](./stories/story-09-007-active-indicators.md) | 2 | High | TODO |
+| 09-008 | [Responsive Layout Components](./stories/story-09-008-responsive-layout-components.md) | 8 | High | TODO |
 
-**Total Points: 26**
+**Total Points: 34**
 
 ## Breakpoint Strategy
 
